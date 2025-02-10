@@ -123,6 +123,15 @@ static t_config_enum_values s_keys_map_FuzzySkinType {
 };
 CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(FuzzySkinType)
 
+static t_config_enum_values s_keys_map_NoiseType {
+    { "classic",        int(NoiseType::Classic) },
+    { "perlin",         int(NoiseType::Perlin) },
+    { "billow",         int(NoiseType::Billow) },
+    { "ridgedmulti",    int(NoiseType::RidgedMulti) },
+    { "voronoi",        int(NoiseType::Voronoi) }
+};
+CONFIG_OPTION_ENUM_DEFINE_STATIC_MAPS(NoiseType)
+
 static t_config_enum_values s_keys_map_InfillPattern {
     { "concentric",         ipConcentric },
     { "zig-zag",            ipRectilinear },
@@ -913,15 +922,19 @@ void PrintConfigDef::init_fff_params()
     
 
     def = this->add("enable_overhang_bridge_fan", coBools);
-    def->label = L("Force cooling for overhang and bridge");
-    def->tooltip = L("Enable this option to optimize part cooling fan speed for overhang and bridge to get better cooling");
+    def->label = L("Force cooling for overhangs and bridges");
+    def->tooltip = L("Enable this option to allow adjustment of the part cooling fan speed for specifically for overhangs, internal and external "
+                     "bridges. Setting the fan speed specifically for these features can improve overall print quality and reduce warping.");
     def->mode = comSimple;
     def->set_default_value(new ConfigOptionBools{ true });
 
     def = this->add("overhang_fan_speed", coInts);
-    def->label = L("Fan speed for overhang");
-    def->tooltip = L("Force part cooling fan to be this speed when printing bridge or overhang wall which has large overhang degree. "
-                     "Forcing cooling for overhang and bridge can get better quality for these part");
+    def->label = L("Overhangs and external bridges fan speed");
+    def->tooltip = L("Use this part cooling fan speed when printing bridges or overhang walls with an overhang threshold that exceeds "
+                     "the value set in the 'Overhangs cooling threshold' parameter above. Increasing the cooling specifically for overhangs "
+                     "and bridges can improve the overall print quality of these features.\n\n"
+                     "Please note, this fan speed is clamped on the lower end by the minimum fan speed threshold set above. It is also adjusted "
+                     "upwards up to the maximum fan speed threshold when the minimum layer time threshold is not met.");
     def->sidetext = L("%");
     def->min = 0;
     def->max = 100;
@@ -929,10 +942,10 @@ void PrintConfigDef::init_fff_params()
     def->set_default_value(new ConfigOptionInts { 100 });
 
     def = this->add("overhang_fan_threshold", coEnums);
-    def->label = L("Cooling overhang threshold");
-    def->tooltip = L("Force cooling fan to be specific speed when overhang degree of printed part exceeds this value. "
-                     "Expressed as percentage which indicates how much width of the line without support from lower layer. "
-                     "0% means forcing cooling for all outer wall no matter how much overhang degree");
+    def->label = L("Overhang cooling activation threshold");
+    def->tooltip = L("When the overhang exceeds this specified threshold, force the cooling fan to run at the 'Overhang Fan Speed' set below. "
+                     "This threshold is expressed as a percentage, indicating the portion of each line's width that is unsupported by the layer "
+                     "beneath it. Setting this value to 0% forces the cooling fan to run for all outer walls, regardless of the overhang degree.");
     def->sidetext = "";
     def->enum_keys_map = &ConfigOptionEnum<OverhangFanThreshold>::get_enum_values();
     def->mode = comAdvanced;
@@ -951,11 +964,23 @@ void PrintConfigDef::init_fff_params()
     def->set_default_value(new ConfigOptionEnumsGeneric{ (int)Overhang_threshold_bridge });
 
     def = this->add("bridge_angle", coFloat);
-    def->label = L("Bridge infill direction");
+    def->label = L("External bridge infill direction");
     def->category = L("Strength");
     def->tooltip = L("Bridging angle override. If left to zero, the bridging angle will be calculated "
         "automatically. Otherwise the provided angle will be used for external bridges. "
         "Use 180°for zero angle.");
+    def->sidetext = L("°");
+    def->min = 0;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(0.));
+    
+    // ORCA: Internal bridge angle override
+    def = this->add("internal_bridge_angle", coFloat);
+    def->label = L("Internal bridge infill direction");
+    def->category = L("Strength");
+    def->tooltip = L("Internal bridging angle override. If left to zero, the bridging angle will be calculated "
+        "automatically. Otherwise the provided angle will be used for internal bridges. "
+        "Use 180°for zero angle.\n\n It is recommended to leave it at 0 unless there is a specific model need not to.");
     def->sidetext = L("°");
     def->min = 0;
     def->mode = comAdvanced;
@@ -1016,8 +1041,7 @@ void PrintConfigDef::init_fff_params()
     def = this->add("precise_outer_wall",coBool);
     def->label = L("Precise wall");
     def->category = L("Quality");
-    def->tooltip  = L("Improve shell precision by adjusting outer wall spacing. This also improves layer consistency.\nNote: This setting "
-                       "will only take effect if the wall sequence is configured to Inner-Outer");
+    def->tooltip  = L("Improve shell precision by adjusting outer wall spacing. This also improves layer consistency.");
     def->set_default_value(new ConfigOptionBool{false});
     
     def = this->add("only_one_wall_top", coBool);
@@ -1276,38 +1300,38 @@ void PrintConfigDef::init_fff_params()
 
     def = this->add("compatible_printers", coStrings);
     def->label = L("Compatible machine");
-    def->mode = comDevelop;
+    def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionStrings());
     def->cli = ConfigOptionDef::nocli;
 
     //BBS.
     def        = this->add("upward_compatible_machine", coStrings);
     def->label = L("upward compatible machine");
-    def->mode  = comDevelop;
+    def->mode  = comAdvanced;
     def->set_default_value(new ConfigOptionStrings());
     def->cli   = ConfigOptionDef::nocli;
 
     def = this->add("compatible_printers_condition", coString);
     def->label = L("Compatible machine condition");
-    //def->tooltip = L("A boolean expression using the configuration values of an active printer profile. "
-    //               "If this expression evaluates to true, this profile is considered compatible "
-    //               "with the active printer profile.");
-    def->mode = comDevelop;
+    def->tooltip = L("A boolean expression using the configuration values of an active printer profile. "
+                  "If this expression evaluates to true, this profile is considered compatible "
+                  "with the active printer profile.");
+    def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionString());
     def->cli = ConfigOptionDef::nocli;
 
     def = this->add("compatible_prints", coStrings);
     def->label = L("Compatible process profiles");
-    def->mode = comDevelop;
+    def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionStrings());
     def->cli = ConfigOptionDef::nocli;
 
     def = this->add("compatible_prints_condition", coString);
     def->label = L("Compatible process profiles condition");
-    //def->tooltip = L("A boolean expression using the configuration values of an active print profile. "
-    //               "If this expression evaluates to true, this profile is considered compatible "
-    //               "with the active print profile.");
-    def->mode = comDevelop;
+    def->tooltip = L("A boolean expression using the configuration values of an active print profile. "
+                  "If this expression evaluates to true, this profile is considered compatible "
+                  "with the active print profile.");
+    def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionString());
     def->cli = ConfigOptionDef::nocli;
 
@@ -2592,15 +2616,27 @@ void PrintConfigDef::init_fff_params()
     
     def = this->add("support_material_interface_fan_speed", coInts);
     def->label = L("Support interface fan speed");
-    def->tooltip = L("This fan speed is enforced during all support interfaces, to be able to weaken their bonding with a high fan speed."
-        "\nSet to -1 to disable this override."
-        "\nCan only be overridden by disable_fan_first_layers.");
+    def->tooltip = L("This part cooling fan speed is applied when printing support interfaces. Setting this parameter to a higher than regular speed "
+                     " reduces the layer binding strength between supports and the supported part, making them easier to separate."
+                    "\nSet to -1 to disable it."
+                     "\nThis setting is overridden by disable_fan_first_layers.");
     def->sidetext = L("%");
     def->min = -1;
     def->max = 100;
     def->mode = comAdvanced;
     def->set_default_value(new ConfigOptionInts{ -1 });
     
+    // ORCA: Add support for separate internal bridge fan speed control
+    def = this->add("internal_bridge_fan_speed", coInts);
+    def->label = L("Internal bridges fan speed");
+    def->tooltip = L("The part cooling fan speed used for all internal bridges. Set to -1 to use the overhang fan speed settings instead.\n\n"
+                     "Reducing the internal bridges fan speed, compared to your regular fan speed, can help reduce part warping due to excessive "
+                     "cooling applied over a large surface for a prolonged period of time.");
+    def->sidetext = L("%");
+    def->min = -1;
+    def->max = 100;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionInts{ -1 });
 
     def = this->add("fuzzy_skin", coEnum);
     def->label = L("Fuzzy Skin");
@@ -2645,6 +2681,57 @@ void PrintConfigDef::init_fff_params()
     def->tooltip = L("Whether to apply fuzzy skin on the first layer");
     def->mode = comSimple;
     def->set_default_value(new ConfigOptionBool(0));
+
+    def = this->add("fuzzy_skin_noise_type", coEnum);
+    def->label = L("Fuzzy skin noise type");
+    def->category = L("Others");
+    def->tooltip = L("Noise type to use for fuzzy skin generation.\n"
+                     "Classic: Classic uniform random noise.\n"
+                     "Perlin: Perlin noise, which gives a more consistent texture.\n"
+                     "Billow: Similar to perlin noise, but clumpier.\n"
+                     "Ridged Multifractal: Ridged noise with sharp, jagged features. Creates marble-like textures.\n"
+                     "Voronoi: Divides the surface into voronoi cells, and displaces each one by a random amount. Creates a patchwork texture.");
+    def->enum_keys_map = &ConfigOptionEnum<NoiseType>::get_enum_values();
+    def->enum_values.push_back("classic");
+    def->enum_values.push_back("perlin");
+    def->enum_values.push_back("billow");
+    def->enum_values.push_back("ridgedmulti");
+    def->enum_values.push_back("voronoi");
+    def->enum_labels.push_back(L("Classic"));
+    def->enum_labels.push_back(L("Perlin"));
+    def->enum_labels.push_back(L("Billow"));
+    def->enum_labels.push_back(L("Ridged Multifractal"));
+    def->enum_labels.push_back(L("Voronoi"));
+    def->mode = comSimple;
+    def->set_default_value(new ConfigOptionEnum<NoiseType>(NoiseType::Classic));
+
+    def = this->add("fuzzy_skin_scale", coFloat);
+    def->label = L("Fuzzy skin feature size");
+    def->category = L("Others");
+    def->tooltip = L("The base size of the coherent noise features, in mm. Higher values will result in larger features.");
+    def->sidetext = L("mm");
+    def->min = 0.1;
+    def->max = 500;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(1.0));
+
+    def = this->add("fuzzy_skin_octaves", coInt);
+    def->label = L("Fuzzy Skin Noise Octaves");
+    def->category = L("Others");
+    def->tooltip = L("The number of octaves of coherent noise to use. Higher values increase the detail of the noise, but also increase computation time.");
+    def->min = 1;
+    def->max = 10;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionInt(4));
+
+    def = this->add("fuzzy_skin_persistence", coFloat);
+    def->label = L("Fuzzy skin noise persistence");
+    def->category = L("Others");
+    def->tooltip = L("The decay rate for higher octaves of the coherent noise. Lower values will result in smoother noise.");
+    def->min = 0.01;
+    def->max = 1;
+    def->mode = comAdvanced;
+    def->set_default_value(new ConfigOptionFloat(0.5));
 
     def = this->add("filter_out_gap_fill", coFloat);
     def->label = L("Filter out tiny gaps");
@@ -4736,10 +4823,21 @@ void PrintConfigDef::init_fff_params()
     def->category = L("Support");
     def->tooltip = L("Support will be generated for overhangs whose slope angle is below the threshold.");
     def->sidetext = L("°");
-    def->min = 1;
+    def->min = 0;
     def->max = 90;
     def->mode = comSimple;
     def->set_default_value(new ConfigOptionInt(30));
+
+    def = this->add("support_threshold_overlap", coFloatOrPercent);
+    def->label = L("Threshold overlap");
+    def->category = L("Support");
+    def->tooltip = L("If threshold angle is zero, support will be generated for overhangs whose overlap is below the threshold. The smaller this value is, the steeper the overhang that can be printed without support.");
+    def->sidetext = L("mm or %");
+    def->min = 0;
+    def->max = 100;
+    def->max_literal = 0.5;
+    def->mode = comSimple;
+    def->set_default_value(new ConfigOptionFloatOrPercent(50., true));
 
     def = this->add("tree_support_branch_angle", coFloat);
     def->label = L("Tree support branch angle");

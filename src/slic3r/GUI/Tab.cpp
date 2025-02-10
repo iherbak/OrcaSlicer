@@ -2150,6 +2150,7 @@ void TabPrint::build()
         optgroup->append_single_option_line("solid_infill_direction");
         optgroup->append_single_option_line("rotate_solid_infill_direction");
         optgroup->append_single_option_line("bridge_angle");
+        optgroup->append_single_option_line("internal_bridge_angle"); // ORCA: Internal bridge angle override
         optgroup->append_single_option_line("minimum_sparse_infill_area");
         optgroup->append_single_option_line("infill_combination");
         optgroup->append_single_option_line("infill_combination_max_layer_height");
@@ -2227,6 +2228,7 @@ void TabPrint::build()
         optgroup->append_single_option_line("support_type", "support#support-types");
         optgroup->append_single_option_line("support_style", "support#support-styles");
         optgroup->append_single_option_line("support_threshold_angle", "support#threshold-angle");
+        optgroup->append_single_option_line("support_threshold_overlap", "support#threshold-angle");
         optgroup->append_single_option_line("raft_first_layer_density");
         optgroup->append_single_option_line("raft_first_layer_expansion");
         optgroup->append_single_option_line("support_on_build_plate_only");
@@ -2351,8 +2353,12 @@ page = add_options_page(L("Others"), "custom-gcode_other"); // ORCA: icon only v
         optgroup->append_single_option_line("timelapse_type", "Timelapse");
 
         optgroup->append_single_option_line("fuzzy_skin");
+        optgroup->append_single_option_line("fuzzy_skin_noise_type");
         optgroup->append_single_option_line("fuzzy_skin_point_distance");
         optgroup->append_single_option_line("fuzzy_skin_thickness");
+        optgroup->append_single_option_line("fuzzy_skin_scale");
+        optgroup->append_single_option_line("fuzzy_skin_octaves");
+        optgroup->append_single_option_line("fuzzy_skin_persistence");
         optgroup->append_single_option_line("fuzzy_skin_first_layer");
 
         optgroup = page->new_optgroup(L("G-code output"), L"param_gcode");
@@ -2381,7 +2387,6 @@ page = add_options_page(L("Others"), "custom-gcode_other"); // ORCA: icon only v
         option.opt.height = 25;//250;
         optgroup->append_single_option_line(option);
 
-#if 1
     page = add_options_page(L("Dependencies"), "custom-gcode_advanced");
         optgroup = page->new_optgroup(L("Profile dependencies"));
 
@@ -2394,7 +2399,6 @@ page = add_options_page(L("Others"), "custom-gcode_other"); // ORCA: icon only v
         optgroup->append_single_option_line(option);
 
         build_preset_description_line(optgroup.get());
-#endif
 }
 
 // Reload current config (aka presets->edited_preset->config) into the UI fields.
@@ -3442,6 +3446,7 @@ void TabFilament::build()
         optgroup->append_single_option_line("enable_overhang_bridge_fan", "auto-cooling");
         optgroup->append_single_option_line("overhang_fan_threshold", "auto-cooling");
         optgroup->append_single_option_line("overhang_fan_speed", "auto-cooling");
+        optgroup->append_single_option_line("internal_bridge_fan_speed"); // ORCA: Add support for separate internal bridge fan speed control
         optgroup->append_single_option_line("support_material_interface_fan_speed");
 
         optgroup = page->new_optgroup(L("Auxiliary part cooling fan"), L"param_cooling_aux_fan");
@@ -3527,14 +3532,6 @@ void TabFilament::build()
         optgroup->append_single_option_line("filament_multitool_ramming_volume");
         optgroup->append_single_option_line("filament_multitool_ramming_flow");
 
-        page     = add_options_page(L("Notes"), "custom-gcode_note"); // ORCA: icon only visible on placeholders
-        optgroup = page->new_optgroup(L("Notes"),"note", 0);
-        optgroup->label_width = 0;
-        option = optgroup->get_option("filament_notes");
-        option.opt.full_width = true;
-        option.opt.height = notes_field_height;// 250;
-        optgroup->append_single_option_line(option);
-#if 1
     page = add_options_page(L("Dependencies"), "advanced");
         optgroup = page->new_optgroup(L("Profile dependencies"));
         create_line_with_widget(optgroup.get(), "compatible_printers", "", [this](wxWindow* parent) {
@@ -3553,8 +3550,15 @@ void TabFilament::build()
         option.opt.full_width = true;
         optgroup->append_single_option_line(option);
 
+    page = add_options_page(L("Notes"), "custom-gcode_note"); // ORCA: icon only visible on placeholders
+        optgroup = page->new_optgroup(L("Notes"),"note", 0);
+        optgroup->label_width = 0;
+        option = optgroup->get_option("filament_notes");
+        option.opt.full_width = true;
+        option.opt.height = notes_field_height;// 250;
+        optgroup->append_single_option_line(option);
+
         //build_preset_description_line(optgroup.get());
-#endif
 }
 
 // Reload current config (aka presets->edited_preset->config) into the UI fields.
@@ -3603,7 +3607,7 @@ void TabFilament::toggle_options()
     auto cfg = m_preset_bundle->printers.get_edited_preset().config;
     if (m_active_page->title() == L("Cooling")) {
       bool has_enable_overhang_bridge_fan = m_config->opt_bool("enable_overhang_bridge_fan", 0);
-      for (auto el : {"overhang_fan_speed", "overhang_fan_threshold"})
+      for (auto el : {"overhang_fan_speed", "overhang_fan_threshold", "internal_bridge_fan_speed"}) // ORCA: Add support for separate internal bridge fan speed control
             toggle_option(el, has_enable_overhang_bridge_fan);
 
       toggle_option("additional_cooling_fan_speed", cfg.opt_bool("auxiliary_fan"));
