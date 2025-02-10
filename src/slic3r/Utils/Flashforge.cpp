@@ -68,7 +68,10 @@ bool Flashforge::test(wxString& msg) const
     BOOST_LOG_TRIVIAL(error) << boost::format("%1%: Get printer at: %2%") % name % url;
 
     auto http = Http::post(std::move(url));
+    http.remove_header("Accept");
+    http.remove_header("Content-Type");
     http.header("Accept", "application/json");
+    http.header("Content-Type", "application/json");
     std::string body = (boost::format("{\"serialNumber\":\"%1%\",\"checkCode\":\"%2%\"}") % m_serial % m_printer_id).str();
     BOOST_LOG_TRIVIAL(error) << boost::format("%1%: %2% with body %3%") % name % url % body;
 
@@ -114,21 +117,37 @@ wxString Flashforge::get_test_failed_msg(wxString& msg) const
     return GUI::from_u8((boost::format("%s: %s") % _utf8(L("Could not connect to Flashforge")) % std::string(msg.ToUTF8())).str());
 }
 
+void Flashforge::sendClearPlate(const std::string& printerId, const std::string& serial) const
+{
+    std::string url  = make_url("control");
+    std::string body = (boost::format("{\"checkCode\":\"%1%\",\"payload\": {\"args\": {\"action\": \"setClearPlatform\"},\"cmd\": "
+                                      "\"stateCtrl_cmd\"},\"serialNumber\": \"%2%\"}") %
+                        m_printer_id % m_serial)
+                           .str();
+
+    auto http = Http::post(std::move(url));
+    http.remove_header("Accept");
+    http.remove_header("Content-Type");
+    http.header("Accept", "application/json");
+    http.header("Content-Type", "application/json");
+
+    http.set_post_body(std::move(body));
+    http.perform_sync();
+}
+
 bool Flashforge::upload(PrintHostUpload upload_data, ProgressFn progress_fn, ErrorFn error_fn, InfoFn info_fn) const
 {
-    const char* name = get_name();
-    const auto upload_filename = upload_data.upload_path.filename();
-    const auto upload_parent_path = upload_data.upload_path.parent_path();
-    std::string url = make_url("uploadGcode");
-    bool result = true;
+    sendClearPlate(m_printer_id,m_serial);
+    
+    const char* name               = get_name();
+    const auto  upload_filename    = upload_data.upload_path.filename();
+    const auto  upload_parent_path = upload_data.upload_path.parent_path();
+    std::string url                = make_url("uploadGcode");
+    bool        result             = true;
 
-    BOOST_LOG_TRIVIAL(error) << boost::format("%1%: Uploading file %2% at %3%, filename: %4%, path: %5%, print: %6%")
-        % name
-        % upload_data.source_path
-        % url
-        % upload_filename.string()
-        % upload_parent_path.string()
-        % (upload_data.post_action == PrintHostPostUploadAction::StartPrint ? "true" : "false");
+    BOOST_LOG_TRIVIAL(error) << boost::format("%1%: Uploading file %2% at %3%, filename: %4%, path: %5%, print: %6%") % name %
+                                    upload_data.source_path % url % upload_filename.string() % upload_parent_path.string() %
+                                    (upload_data.post_action == PrintHostPostUploadAction::StartPrint ? "true" : "false");
 
     auto http = Http::post(std::move(url));
     http.header("serialNumber", m_serial);
@@ -139,12 +158,13 @@ bool Flashforge::upload(PrintHostUpload upload_data, ProgressFn progress_fn, Err
     http.header("fileSize", std::to_string(filesize));
 
     http.form_add_file("gcodeFile", upload_data.source_path.string(), upload_filename.string())
-  
+
         .on_complete([&](std::string body, unsigned status) {
             BOOST_LOG_TRIVIAL(error) << boost::format("%1%: File uploaded: HTTP %2%: %3%") % name % status % body;
         })
         .on_error([&](std::string body, std::string error, unsigned status) {
-            BOOST_LOG_TRIVIAL(error) << boost::format("%1%: Error uploading file to %2%: %3%, HTTP %4%, body: `%5%`") % name % url % error % status % body;
+            BOOST_LOG_TRIVIAL(error) << boost::format("%1%: Error uploading file to %2%: %3%, HTTP %4%, body: `%5%`") % name % url % error %
+                                            status % body;
             error_fn(format_error(body, error, status));
             result = false;
         })

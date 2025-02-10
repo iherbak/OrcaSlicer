@@ -36,6 +36,7 @@ private:
     std::string m_serial;
     std::string m_printer_id;
     std::string make_url(const std::string &path) const;
+    void sendClearPlate(const std::string &printerId, const std::string &serial) const;
 };
 
 } // namespace Slic3r
