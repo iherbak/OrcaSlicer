@@ -63,6 +63,7 @@ public:
     const SurfaceCollection     *slices;
     const LayerRegionPtrs       *compatible_regions;
     const ExPolygons            *upper_slices;
+    const SurfaceCollection     *upper_slices_same_region;
     const ExPolygons            *lower_slices;
     double                       layer_height;
     int                          layer_id;
@@ -86,9 +87,6 @@ public:
     std::vector<Polygons>       m_lower_polygons_series;
     std::vector<Polygons>       m_external_lower_polygons_series;
     std::vector<Polygons>       m_smaller_external_lower_polygons_series;
-    std::pair<double, double>   m_lower_overhang_dist_boundary;
-    std::pair<double, double>   m_external_overhang_dist_boundary;
-    std::pair<double, double>   m_smaller_external_overhang_dist_boundary;
 
     bool                                            has_fuzzy_skin = false;
     bool                                            has_fuzzy_hole = false;
@@ -141,7 +139,6 @@ private:
     void split_top_surfaces(const ExPolygons &orig_polygons, ExPolygons &top_fills, ExPolygons &non_top_polygons, ExPolygons &fill_clip) const;
     void apply_extra_perimeters(ExPolygons& infill_area);
     void process_no_bridge(Surfaces& all_surfaces, coord_t perimeter_spacing, coord_t ext_perimeter_width);
-    std::pair<double, double> dist_boundary(double width);
 
 private:
     bool        m_spiral_vase;

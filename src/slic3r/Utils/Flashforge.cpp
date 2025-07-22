@@ -37,6 +37,9 @@ Flashforge::Flashforge(DynamicPrintConfig* config)
     , m_port("8898")
     , m_serial(config->opt_string("machine_serial"))
     , m_printer_id(config->opt_string("printer_id"))
+    , m_gcFlavor(config->option<ConfigOptionEnum<GCodeFlavor>>("gcode_flavor")->value)
+    , m_bufferSize(4096) // 4K buffer size
+
 {
     BOOST_LOG_TRIVIAL(error) << boost::format("Flashforge: init  %1% %2% %3% %4%") % m_host % m_port % m_serial % m_printer_id;
 }
@@ -110,7 +113,7 @@ bool Flashforge::test(wxString& msg) const
     return res;
 }
 
-wxString Flashforge::get_test_ok_msg() const { return _(L("Connection to Flashforge works correctly.")); }
+wxString Flashforge::get_test_ok_msg() const { return _(L("Serial connection to Flashforge is working correctly.")); }
 
 wxString Flashforge::get_test_failed_msg(wxString& msg) const
 {
