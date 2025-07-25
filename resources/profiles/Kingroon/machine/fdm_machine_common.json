@@ -62,8 +62,6 @@
   "nozzle_type": "undefine",
   "nozzle_volume": "0",
   "print_host": "",
-  "machine_serial":"",
-  "printer_id":"",
   "print_host_webui": "",
   "retract_restart_extra": ["0"],
   "retract_restart_extra_toolchange": ["0"],

@@ -54,5 +54,7 @@
   "layer_change_gcode": "",
   "scan_first_layer": "0",
   "nozzle_type": "undefine",
-  "auxiliary_fan": "1"
+  "auxiliary_fan": "1",
+  "activation_code":"",
+  "printer_id":""
 }
