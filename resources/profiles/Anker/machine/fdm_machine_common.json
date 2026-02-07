@@ -105,5 +105,7 @@
     "support_air_filtration": "0",
     "wipe": [
         "1"
-    ]
+    ],
+    "activation_code":"",
+    "printer_id":""
 }
