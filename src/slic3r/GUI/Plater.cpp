@@ -17146,13 +17146,8 @@ void Plater::validate_current_plate(bool& model_fits, bool& validate_error)
     model_fits = model_fits && object_results.filaments.empty();
     validate_error = false;
     if (p->printer_technology == ptFFF) {
-<<<<<<< HEAD
-        std::string plater_text = _u8L("An object is laid over the boundary of plate or exceeds the height limit.\n"
-                    "Please solve the problem by moving it totally on or off the plate, and confirming that the height is within the build volume.");
-=======
         //std::string plater_text = _u8L("An object is laid over the boundary of plate or exceeds the height limit.\n"
         //            "Please solve the problem by moving it totally on or off the plate, and confirming that the height is within the build volume.");;
->>>>>>> upstream/main
         StringObjectException warning;
         Polygons polygons;
         std::vector<std::pair<Polygon, float>> height_polygons;

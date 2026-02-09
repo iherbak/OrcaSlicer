@@ -365,12 +365,8 @@ private:
 
     wxStaticBitmap* curr_humidity_img;
     wxStaticBitmap* m_img;
-<<<<<<< HEAD
-    Label* m_staticText;
-=======
 
     Label* m_staticText;;
->>>>>>> upstream/main
     Label* m_staticText_note;
 
     AmsHumidityLevelList* humidity_level_list{nullptr};
