@@ -87,7 +87,6 @@ jobs:
 #   Mac
       - name: Install tools mac
         if: contains(inputs.os, 'macos')
-        if: contains(inputs.os, 'macos')
         run: |
           if [ -z "${{ vars.SELF_HOSTED }}" ]; then
             brew install libtool
