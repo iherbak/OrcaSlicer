@@ -87,13 +87,25 @@ jobs:
 #   Mac
       - name: Install tools mac
         if: contains(inputs.os, 'macos')
+        if: contains(inputs.os, 'macos')
         run: |
+          if [ -z "${{ vars.SELF_HOSTED }}" ]; then
+            brew install libtool
+            brew list
+          fi
           if [ -z "${{ vars.SELF_HOSTED }}" ]; then
             brew install libtool
             brew list
           fi
           mkdir -p ${{ github.workspace }}/deps/build
 
+      - name: Free disk space
+        if: contains(inputs.os, 'macos') && !vars.SELF_HOSTED
+        run: |
+          df -hI /dev/disk3s1s1
+          sudo find /Applications -maxdepth 1 -type d -name "Xcode_*.app" ! -name "Xcode_15.4.app" -exec rm -rf {} +
+          sudo rm -rf ~/Library/Developer/CoreSimulator/Caches/*
+          df -hI /dev/disk3s1s1
       - name: Free disk space
         if: contains(inputs.os, 'macos') && !vars.SELF_HOSTED
         run: |
