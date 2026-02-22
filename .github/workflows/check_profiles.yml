@@ -39,7 +39,7 @@ jobs:
       - name: Download
         working-directory: ${{ github.workspace }}
         run: |
-          curl -LJO https://github.com/iherbak/Orca_tools/releases/download/1/OrcaSlicer_profile_validator
+          curl -LJO https://github.com/SoftFever/Orca_tools/releases/download/1/OrcaSlicer_profile_validator
           chmod +x ./OrcaSlicer_profile_validator
 
       # validate profiles
