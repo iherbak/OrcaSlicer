@@ -176,8 +176,8 @@ jobs:
       if: github.repository == 'iherbak/OrcaSlicer' && github.ref == 'refs/heads/main'
       uses: WebFreak001/deploy-nightly@v3.2.0
       with:
-        upload_url: https://uploads.github.com/repos/iherbak/OrcaSlicer/releases/137995723/assets{?name,label}
-        release_id: 137995723
+        upload_url: https://uploads.github.com/repos/iherbak/OrcaSlicer/releases/146857256/assets{?name,label}
+        release_id: 146857256
         asset_path: /__w/OrcaSlicer/OrcaSlicer/OrcaSlicer-Linux-flatpak_${{ env.ver }}_${{ matrix.variant.arch }}.flatpak
         asset_name: OrcaSlicer-Linux-flatpak_nightly_${{ matrix.variant.arch }}.flatpak
         asset_content_type: application/octet-stream
