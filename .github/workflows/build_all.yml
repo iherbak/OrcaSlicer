@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
     # Don't run scheduled builds on forks:
-    if: ${{ !cancelled() && (github.event_name != 'schedule' || github.repository == 'OrcaSlicer/OrcaSlicer') }}
+    if: ${{ !cancelled() && (github.event_name != 'schedule' || github.repository == 'iherbak/OrcaSlicer') }}
     uses: ./.github/workflows/build_check_cache.yml
     with:
       os: ubuntu-24.04
@@ -67,7 +67,7 @@ jobs:
           - os: ${{ vars.SELF_HOSTED && 'orca-macos-arm64' || 'macos-14' }}
             arch: arm64
     # Don't run scheduled builds on forks:
-    if: ${{ !cancelled() && (github.event_name != 'schedule' || github.repository == 'OrcaSlicer/OrcaSlicer') }}
+    if: ${{ !cancelled() && (github.event_name != 'schedule' || github.repository == 'iherbak/OrcaSlicer') }}
     uses: ./.github/workflows/build_check_cache.yml
     with:
       os: ${{ matrix.os }}
@@ -133,7 +133,7 @@ jobs:
           - arch: aarch64
             runner: ubuntu-24.04-arm
     # Don't run scheduled builds on forks:
-    if: ${{ !cancelled() && (github.event_name != 'schedule' || github.repository == 'OrcaSlicer/OrcaSlicer') }}
+    if: ${{ !cancelled() && (github.event_name != 'schedule' || github.repository == 'iherbak/OrcaSlicer') }}
     runs-on: ${{ matrix.variant.runner }}
     env:
       date:
@@ -173,11 +173,11 @@ jobs:
         name: OrcaSlicer-Linux-flatpak_${{ env.ver }}_${{ matrix.variant.arch }}.flatpak
         path: '/__w/OrcaSlicer/OrcaSlicer/OrcaSlicer-Linux-flatpak_${{ env.ver }}_${{ matrix.variant.arch }}.flatpak'
     - name: Deploy Flatpak to nightly release
-      if: github.repository == 'OrcaSlicer/OrcaSlicer' && github.ref == 'refs/heads/main'
+      if: github.repository == 'iherbak/OrcaSlicer' && github.ref == 'refs/heads/main'
       uses: WebFreak001/deploy-nightly@v3.2.0
       with:
-        upload_url: https://uploads.github.com/repos/OrcaSlicer/OrcaSlicer/releases/137995723/assets{?name,label}
-        release_id: 137995723
+        upload_url: https://uploads.github.com/repos/iherbak/OrcaSlicer/releases/146857256/assets{?name,label}
+        release_id: 146857256
         asset_path: /__w/OrcaSlicer/OrcaSlicer/OrcaSlicer-Linux-flatpak_${{ env.ver }}_${{ matrix.variant.arch }}.flatpak
         asset_name: OrcaSlicer-Linux-flatpak_nightly_${{ matrix.variant.arch }}.flatpak
         asset_content_type: application/octet-stream
