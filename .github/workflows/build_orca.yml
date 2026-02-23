@@ -382,7 +382,7 @@ jobs:
         uses: WebFreak001/deploy-nightly@v3.2.0
         with:
           upload_url: https://uploads.github.com/repos/iherbak/OrcaSlicer/releases/146857256/assets{?name,label}
-          release_id: 137995723
+          release_id: 146857256
           asset_path: ./build/OrcaSlicer_Linux_AppImage${{ env.ubuntu-ver-str }}_${{ env.ver }}.AppImage
           asset_name: OrcaSlicer_Linux_AppImage${{ env.ubuntu-ver-str }}_nightly.AppImage
           asset_content_type: application/octet-stream
@@ -403,7 +403,7 @@ jobs:
         uses: WebFreak001/deploy-nightly@v3.2.0
         with:
           upload_url: https://uploads.github.com/repos/iherbak/OrcaSlicer/releases/146857256/assets{?name,label}
-          release_id: 137995723
+          release_id: 146857256
           asset_path: ./build/src/Release/OrcaSlicer_profile_validator
           asset_name: OrcaSlicer_profile_validator_Linux${{ env.ubuntu-ver-str }}_nightly
           asset_content_type: application/octet-stream
