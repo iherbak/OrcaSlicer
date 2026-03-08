@@ -974,7 +974,8 @@ void Tab::init_options_list()
             m_options_list.emplace(opt_key, m_opt_status_value);
             continue;
         }
-        if (m_config->option(opt_key)->is_vector())
+        const ConfigOptionDef* opt_def = m_config->def()->get(opt_key);
+        if (m_config->option(opt_key)->is_vector() && !(opt_def && opt_def->gui_flags == "serialized"))
             m_options_list.emplace(opt_key + "#0", m_opt_status_value);
         else
             m_options_list.emplace(opt_key, m_opt_status_value);
@@ -1597,7 +1598,7 @@ void Tab::on_value_change(const std::string& opt_key, const boost::any& value)
         bool wipe_tower_enabled = m_config->option<ConfigOptionBool>("enable_prime_tower")->value;
         if (boost::any_cast<bool>(value) && !wipe_tower_enabled) {
             MessageDialog dlg(wxGetApp().plater(),
-                              _L("Prime tower is required for clumping detection. There may be flaws on the model without prime tower. Do you still want to enable clumping detection?"),
+                              _L("A prime tower is required for clumping detection. There may be flaws on the model without prime tower. Do you still want to enable clumping detection?"),
                               _L("Warning"), wxICON_WARNING | wxYES | wxNO);
             if (dlg.ShowModal() == wxID_NO) {
                 DynamicPrintConfig new_conf = *m_config;
@@ -1706,7 +1707,7 @@ void Tab::on_value_change(const std::string& opt_key, const boost::any& value)
                                         "Yes - Change these settings automatically\n"
                                         "No  - Do not change these settings for me");
             }
-            MessageDialog      dialog(wxGetApp().plater(), msg_text, "Suggestion", wxICON_WARNING | wxYES | wxNO);
+            MessageDialog      dialog(wxGetApp().plater(), msg_text, _L("Suggestion"), wxICON_WARNING | wxYES | wxNO);
             DynamicPrintConfig new_conf = *m_config;
             if (dialog.ShowModal() == wxID_YES) {
                 auto &filament_presets = Slic3r::GUI::wxGetApp().preset_bundle->filament_presets;
@@ -4406,7 +4407,6 @@ void TabPrinter::build_fff()
 
         optgroup->append_single_option_line("use_relative_e_distances", "printer_basic_information_advanced#use-relative-e-distances");
         optgroup->append_single_option_line("use_firmware_retraction", "printer_basic_information_advanced#use-firmware-retraction");
-        optgroup->append_single_option_line("bed_temperature_formula", "printer_basic_information_advanced#bed-temperature-type");
         // optgroup->append_single_option_line("spaghetti_detector");
         optgroup->append_single_option_line("time_cost", "printer_basic_information_advanced#time-cost");
 
@@ -4891,6 +4891,7 @@ if (is_marlin_flavor)
             });
         };
         optgroup->append_single_option_line("manual_filament_change", "printer_multimaterial_setup#manual-filament-change");
+        optgroup->append_single_option_line("bed_temperature_formula", "printer_basic_information_advanced#bed-temperature-type");
 
         optgroup = page->new_optgroup(L("Wipe tower"), "param_tower");
         optgroup->append_single_option_line("purge_in_prime_tower", "printer_multimaterial_wipe_tower#purge-in-prime-tower");
